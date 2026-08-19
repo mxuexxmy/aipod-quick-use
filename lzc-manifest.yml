@@ -1,0 +1,6 @@
+# 算力舱快捷使用 - 运行时配置
+# 纯静态前端应用；浏览器直连算力舱 Ollama（算力舱默认放行跨域，无需反代）
+application:
+  subdomain: aipod-quick
+  routes:
+    - /=file:///lzcapp/pkg/content
