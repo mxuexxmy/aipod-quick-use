@@ -464,6 +464,7 @@ const router = (() => {
     });
     const el = document.getElementById("page");
     pages[name].render(el, query);
+    el.scrollTop = 0; // 内容区独立滚动，切页回到顶部
     document.title = pages[name].title + " · 算力舱快捷使用";
   }
 

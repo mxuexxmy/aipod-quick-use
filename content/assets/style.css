@@ -103,7 +103,8 @@ code, pre, .mono { font-family: "JetBrains Mono", "Cascadia Code", Consolas, "SF
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: none; }
 
-#app { display: flex; flex-direction: column; min-height: 100vh; }
+/* 应用外壳：顶栏 + 左右布局占满视口，仅内容区滚动 */
+#app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
 /* ============ 图标(vendored Feather 风格雪碧图) ============ */
 .icon {
@@ -139,11 +140,12 @@ code, pre, .mono { font-family: "JetBrains Mono", "Cascadia Code", Consolas, "SF
 .icon-btn:active { transform: scale(.94); }
 
 /* ============ 布局 ============ */
-.layout { display: flex; flex: 1; min-height: 0; }
+.layout { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 .sidebar {
   width: 198px; flex-shrink: 0; padding: 14px 10px;
   display: flex; flex-direction: column; gap: 4px;
   border-right: 1px solid var(--border);
+  overflow-y: auto; scrollbar-width: none;
 }
 .nav-item {
   display: flex; align-items: center; gap: 10px;
@@ -162,9 +164,12 @@ code, pre, .mono { font-family: "JetBrains Mono", "Cascadia Code", Consolas, "SF
 }
 
 .main {
-  flex: 1; min-width: 0; margin: 0 auto;
+  flex: 1; min-width: 0; min-height: 0; margin: 0 auto;
   width: 100%; max-width: 980px;
   padding: 30px 34px 72px;
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-gutter: stable;
+  scroll-behavior: smooth; scroll-padding-top: 20px;
 }
 /* 路由切换时的级联入场 */
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
@@ -357,7 +362,7 @@ table.table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 
 /* ============ 文档页 ============ */
 .docs-layout { display: flex; gap: 24px; align-items: flex-start; }
-.docs-nav { width: 200px; flex-shrink: 0; position: sticky; top: 78px; }
+.docs-nav { width: 200px; flex-shrink: 0; position: sticky; top: 4px; }
 .docs-nav .doc-link {
   display: block; padding: 8px 12px; border-radius: var(--radius-sm);
   color: var(--text-soft); text-decoration: none; font-size: 13.5px; font-weight: 500;
