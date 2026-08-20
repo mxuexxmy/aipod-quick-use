@@ -1,5 +1,5 @@
 package: xyz.mxue.ai.pod.aipod-quick-use
-version: 1.1.0
+version: 1.1.1
 name: 算力舱快捷使用
 description: "算力舱快捷使用助手：一键查看可用模型、在线验证 API、速查算力舱地址，并附带完整的 AI 使用文档。"
 homepage: https://github.com/mxuexxmy/aipod-quick-use

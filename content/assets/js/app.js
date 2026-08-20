@@ -528,10 +528,15 @@ function initSettingsModal() {
   // 演示模式标记
   if (PodAPI.MOCK) document.getElementById("mockBadge").hidden = false;
 
-  // 全局复制按钮代理
+  // 全局复制代理：data-copy 按钮，或点击 copy-row 任意位置
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-copy]");
-    if (btn) AppUtil.copyText(btn.dataset.copy, btn);
+    if (btn) { AppUtil.copyText(btn.dataset.copy, btn); return; }
+    const row = e.target.closest(".copy-row");
+    if (row) {
+      const code = row.querySelector("code");
+      if (code) AppUtil.copyText(code.textContent, row.querySelector(".copy-btn"));
+    }
   });
 
   router.init();
