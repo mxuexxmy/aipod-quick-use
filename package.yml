@@ -1,13 +1,16 @@
 package: xyz.mxue.ai.pod.aipod-quick-use
-version: 1.1.2
-name: 算力舱快捷使用
-description: "算力舱快捷使用助手：一键查看可用模型、在线验证 API、速查算力舱地址，并附带完整的 AI 使用文档。"
+version: 1.2.0
+name: AI Pod 综合门户
+description: "稳定只读的 AI Pod 综合门户：检查算力舱与 Ollama、查看模型和运行状态、发现 AI 应用、验证 API 并查阅接入文档。"
 homepage: https://github.com/mxuexxmy/aipod-quick-use
 author: mxuexxmy
+permissions:
+  required:
+    - net.internet
 locales:
   zh-CN:
-    name: 算力舱快捷使用
-    description: "算力舱快捷使用助手：一键查看可用模型、在线验证 API、速查算力舱地址，并附带完整的 AI 使用文档。"
+    name: AI Pod 综合门户
+    description: "稳定只读的 AI Pod 综合门户：检查算力舱与 Ollama、查看模型和运行状态、发现 AI 应用、验证 API 并查阅接入文档。"
   en-US:
-    name: AI Pod Quick Use
-    description: "Handy companion for the AI Pod: list models, verify API connectivity, look up service addresses, with full usage docs."
+    name: AI Pod Portal
+    description: "A stable read-only AI Pod portal for readiness checks, Ollama models, AI app discovery, API verification, and integration guides."

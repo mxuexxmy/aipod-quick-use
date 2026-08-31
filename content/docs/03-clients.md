@@ -16,14 +16,14 @@ Claude Code 和 Anthropic SDK 则走 Anthropic 兼容接口（基础地址 `{{OL
 
 ## ChatBox（全平台聊天客户端）
 
-1. 设置 → 模型 → 添加自定义提供方
+1. 依次进入“设置”“模型”“添加自定义提供方”
 2. API 域名填：`{{OPENAI_BASE}}`
 3. API Key 填：`sk-ollama`（任意）
 4. 模型：手动添加 `qwen3:4b`（填你已安装的模型名）
 
 ## Cherry Studio（桌面多模型客户端）
 
-1. 设置 → 模型服务 → 添加（或选 OpenAI 兼容提供商）
+1. 依次进入“设置”“模型服务”“添加”，或选择 OpenAI 兼容提供商
 2. API 地址：`{{OPENAI_BASE}}`
 3. API Key：`sk-ollama`
 4. 在模型管理中添加模型 `qwen3:4b`，即可开始对话
@@ -32,7 +32,7 @@ Claude Code 和 Anthropic SDK 则走 Anthropic 兼容接口（基础地址 `{{OL
 
 适合用小模型（如 `qwen3:4b`），翻译速度体验最好。
 
-1. 设置 → 翻译服务 → 添加 **OpenAI** 自定义服务
+1. 依次进入“设置”“翻译服务”，添加 **OpenAI** 自定义服务
 2. 接口地址：`{{OPENAI_BASE}}/chat/completions`
 3. API Key：`sk-ollama`
 4. 模型：`qwen3:4b`
@@ -50,7 +50,7 @@ Claude Code 和 Anthropic SDK 则走 Anthropic 兼容接口（基础地址 `{{OL
 
 Ollama 提供 Anthropic 兼容的 `/v1/messages` 接口，Claude Code 可以直接把算力舱当作后端，无需任何中转。
 
-**方式 A · 环境变量（临时）**
+**方式 A：环境变量（临时）**
 
 ```bash
 export ANTHROPIC_BASE_URL={{OLLAMA_URL}}
@@ -59,7 +59,7 @@ export ANTHROPIC_MODEL=qwen3:30b-a3b
 claude
 ```
 
-**方式 B · 写入配置文件（长期）**
+**方式 B：写入配置文件（长期）**
 
 编辑 `~/.claude/settings.json`：
 

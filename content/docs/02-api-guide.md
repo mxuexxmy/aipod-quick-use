@@ -30,7 +30,7 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message.content)
 ```
 
-### Python · 流式输出
+### Python 流式输出
 
 ```python
 stream = client.chat.completions.create(
@@ -70,6 +70,19 @@ const data = await resp.json();
 console.log(data.choices[0].message.content);
 ```
 
+### OpenAI Responses API
+
+较新的 Ollama 版本支持非状态化的 `/v1/responses`。它不支持 `previous_response_id` 或持久会话，调用方应自行保留对话历史。
+
+```bash
+curl {{OPENAI_BASE}}/responses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3:4b",
+    "input": "用一句话介绍算力舱"
+  }'
+```
+
 ## Anthropic 兼容接口（`/v1/messages`）
 
 与 Anthropic Messages API 格式一致，Claude Code、Anthropic SDK 可以直接对接。
@@ -105,9 +118,11 @@ print(msg.content[0].text)
 
 > 思考型模型（deepseek-r1、qwen3 等）可能返回 `thinking` 内容块，遍历 `msg.content` 时注意区分类型。
 
+Anthropic 兼容层目前不支持 token 计数、提示词缓存、批处理、PDF 文档块和强制 `tool_choice`。使用这些能力前请查看当前 Ollama 官方文档。
+
 ## 原生 API（Ollama）
 
-### 对话 · `/api/chat`
+### 对话 `/api/chat`
 
 支持流式（NDJSON），消息体格式与 OpenAI 类似：
 
@@ -129,7 +144,7 @@ curl {{OLLAMA_URL}}/api/chat -d '{
 
 吞吐速率 = `eval_count / (eval_duration / 1e9)` tokens/s。
 
-### 单轮生成 · `/api/generate`
+### 单轮生成 `/api/generate`
 
 ```bash
 curl {{OLLAMA_URL}}/api/generate -d '{
@@ -152,7 +167,7 @@ curl {{OLLAMA_URL}}/api/pull -d '{ "name": "qwen3:4b" }'
 curl {{OLLAMA_URL}}/api/delete -X DELETE -d '{ "name": "qwen3:4b" }'
 ```
 
-### 文本向量 · `/api/embed`
+### 文本向量 `/api/embed`
 
 供知识库（RAG）、语义搜索类应用使用：
 

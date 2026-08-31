@@ -9,7 +9,9 @@
 const PodAPI = (() => {
   const SETTINGS_KEY = "aipod.settings.v1";
 
-  const MOCK = new URLSearchParams(location.search).has("mock");
+  const QUERY = new URLSearchParams(location.search);
+  const MOCK = QUERY.has("mock");
+  const MOCK_SCENARIO = !QUERY.get("mock") || QUERY.get("mock") === "1" ? "ready" : QUERY.get("mock");
 
   // ---------- 设置 ----------
   function loadSettings() {
@@ -39,9 +41,33 @@ const PodAPI = (() => {
   // ---------- 盒子域名 ----------
   function getBoxDomain() {
     const h = location.hostname;
+    if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[?::1\]?)$/i.test(h) || /^\d+\.\d+\.\d+\.\d+$/.test(h)) return h;
     const parts = h.split(".");
-    if (parts.length <= 2) return h; // localhost / 内网 IP 等本地开发场景
+    if (parts.length <= 2) return h;
     return parts.slice(1).join(".");
+  }
+
+  function aiManagerBase() { return "https://ai." + getBoxDomain(); }
+
+  async function hasDefaultPod() {
+    if (MOCK) {
+      await sleep(260);
+      if (MOCK_SCENARIO === "pod-none") return { state: "unavailable", status: 503 };
+      if (MOCK_SCENARIO === "pod-unknown") return { state: "unknown", error: "演示：无法确认设备状态" };
+      return { state: "ready", status: 200 };
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      const res = await fetch(aiManagerBase() + "/backend/device/hasDefault", {
+        method: "GET", credentials: "include", signal: ctrl.signal,
+      });
+      if (res.status === 200) return { state: "ready", status: 200 };
+      if (res.status === 503) return { state: "unavailable", status: 503 };
+      return { state: "unknown", status: res.status, error: "HTTP " + res.status };
+    } catch (e) {
+      return { state: "unknown", error: friendlyError(e) };
+    } finally { clearTimeout(timer); }
   }
 
   // ---------- mock 数据 ----------
@@ -83,29 +109,60 @@ const PodAPI = (() => {
   async function probe() {
     if (MOCK) {
       await sleep(400);
+      if (MOCK_SCENARIO === "offline") return { ok: false, latencyMs: 23, error: "演示：Ollama 服务不可达" };
       return { ok: true, latencyMs: 23, version: "0.6.9（演示）", mode: "mock" };
     }
     const start = performance.now();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
     try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 8000);
       const res = await fetch(reqBase() + "/api/version", { signal: ctrl.signal, headers: { Accept: "application/json" } });
-      clearTimeout(timer);
       const latencyMs = Math.round(performance.now() - start);
       if (!res.ok) return { ok: false, latencyMs, error: "HTTP " + res.status };
       const data = await res.json().catch(() => ({}));
       return { ok: true, latencyMs, version: data.version || "未知版本" };
     } catch (e) {
       return { ok: false, latencyMs: Math.round(performance.now() - start), error: friendlyError(e) };
-    }
+    } finally { clearTimeout(timer); }
   }
 
   // ---------- 模型列表 ----------
   async function listModels() {
-    if (MOCK) { await sleep(500); return normalizeTags(MOCK_MODELS); }
+    if (MOCK) {
+      await sleep(500);
+      if (MOCK_SCENARIO === "offline") throw new Error("演示：Ollama 服务不可达");
+      return MOCK_SCENARIO === "empty" ? [] : normalizeTags(MOCK_MODELS);
+    }
     const res = await fetch(reqBase() + "/api/tags", { headers: { Accept: "application/json" } });
     if (!res.ok) throw new Error("HTTP " + res.status);
     return normalizeTags(await res.json());
+  }
+
+  async function listRunningModels() {
+    if (MOCK) {
+      await sleep(240);
+      if (MOCK_SCENARIO === "empty" || MOCK_SCENARIO === "offline") return [];
+      return [{ name: "qwen3:4b", size: 2573259904, expiresAt: new Date(Date.now() + 240000).toISOString(), contextLength: 8192 }];
+    }
+    const res = await fetch(reqBase() + "/api/ps", { headers: { Accept: "application/json" } });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return (await res.json()).models?.map((m) => ({
+      name: m.name || m.model || "", size: m.size || m.size_vram || 0,
+      expiresAt: m.expires_at || "", contextLength: m.context_length || 0,
+    })) || [];
+  }
+
+  async function showModel(name) {
+    if (MOCK) {
+      await sleep(320);
+      return { modelInfo: { "general.architecture": name.includes("nomic") ? "bert" : "qwen3", "general.parameter_count": 4000000000 }, capabilities: name.includes("nomic") ? ["embedding"] : ["completion", "tools", "thinking"], template: "" };
+    }
+    const res = await fetch(reqBase() + "/api/show", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: name }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    return { modelInfo: data.model_info || {}, capabilities: data.capabilities || [], template: data.template || "" };
   }
 
   function normalizeTags(data) {
@@ -170,11 +227,11 @@ const PodAPI = (() => {
   function explainSuffix(raw) {
     const s = String(raw || "");
     if (/illegal instruction/i.test(s))
-      return "\n\n💡 该模型加载时崩溃（illegal instruction），通常与 Ollama 运行时版本或算力舱指令集不兼容。建议：重启算力舱的 Ollama 应用后，换其他模型测试；若反复出现，等待/更新 Ollama 应用版本。";
+      return "\n\n建议：该模型加载时崩溃，通常与 Ollama 运行时版本或算力舱指令集不兼容。请重启 Ollama 后换其他模型测试。";
     if (/model .*not found|not found, try pulling/i.test(s))
-      return "\n\n💡 模型不存在：请到「模型列表」核对模型名（需与列表完全一致，含冒号后的版本号）。";
+      return "\n\n建议：请到「模型列表」核对完整模型名，包括冒号后的版本号。";
     if (/out of memory|OOM|cuda|gpu/i.test(s))
-      return "\n\n💡 显存不足或 GPU 异常：请关闭占用算力舱显存的其他应用，或换参数更小的模型。";
+      return "\n\n建议：请关闭占用显存的其他应用，或换用参数更小的模型。";
     return "";
   }
 
@@ -197,5 +254,5 @@ const PodAPI = (() => {
     return v.toFixed(v >= 100 || i === 0 ? 0 : 1) + " " + units[i];
   }
 
-  return { MOCK, settings, saveSettings, reqBase, externalBase, getBoxDomain, probe, listModels, chatStream, formatSize };
+  return { MOCK, MOCK_SCENARIO, settings, saveSettings, reqBase, externalBase, getBoxDomain, aiManagerBase, hasDefaultPod, probe, listModels, listRunningModels, showModel, chatStream, formatSize };
 })();

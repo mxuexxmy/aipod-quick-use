@@ -1,5 +1,5 @@
 /* ============ 文档中心渲染 ============
- * 加载 content/docs/*.md → marked 渲染 → 占位符替换为当前真实地址 → 代码高亮 + 复制按钮
+ * 加载本地 Markdown，替换地址占位符，完成安全渲染、代码高亮和复制操作。
  */
 "use strict";
 
@@ -10,6 +10,7 @@ const DocsCenter = (() => {
     { id: "03-clients", title: "客户端配置" },
     { id: "04-apps", title: "算力舱常用应用" },
     { id: "05-endpoints", title: "地址与多算力舱" },
+    { id: "06-pod-management", title: "设备与端口转发" },
   ];
 
   // 将文档中的占位符替换为当前环境真实地址，实现"复制即可用"
@@ -31,7 +32,7 @@ const DocsCenter = (() => {
     }
     const div = document.createElement("div");
     div.className = "markdown";
-    div.innerHTML = html;
+    div.innerHTML = window.DOMPurify ? DOMPurify.sanitize(html) : html;
     decorate(div);
     return div;
   }
