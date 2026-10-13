@@ -166,9 +166,10 @@ function offlineGuide(extraHtml = "") {
 function renderOverview(el) {
   el.innerHTML = `
     <div class="page-head page-head-action">
-      <div><h1 class="page-title">总览</h1><p class="page-desc">确认设备、服务和模型已准备好，再开始调用</p></div>
+      <div><h1 class="page-title">让本地算力，随时可用。</h1><p class="page-desc">从设备连接到第一条回复，在这里开始。</p></div>
       <button class="btn" id="overviewRefresh">${AppUtil.iconSvg("refresh")}重新检查</button>
     </div>
+    <section class="connection-banner" aria-label="接入流程"><div><strong>你的 AI 连接工作台</strong><p>检查算力舱，选择本地模型，把 API 接入日常工具。</p><a class="btn btn-primary" href="#/verify">开始验证 API</a><a class="banner-link" href="#/docs?id=01-quick-start">首次使用指南</a></div><div class="connection-path" aria-hidden="true"><span>${AppUtil.iconSvg("cpu")}算力舱</span><i></i><span>${AppUtil.iconSvg("box")}本地模型</span><i></i><span>${AppUtil.iconSvg("link")}你的应用</span></div></section>
     <section class="readiness" aria-label="AI Pod 就绪状态" aria-live="polite">
       ${statePanel("podCheck", "cpu", "默认算力舱", "正在确认设备连接状态")}
       ${statePanel("ollamaCheck", "zap", "Ollama 服务", "正在检测 API 连通性")}
@@ -255,7 +256,7 @@ function renderModels(el) {
       body.innerHTML = `<div class="empty">${AppUtil.iconSvg("box")}<strong>${allModels.length ? "没有匹配的模型" : "还没有安装模型"}</strong><p>${allModels.length ? "尝试清除搜索或筛选条件" : "可通过 Open WebUI、webollama 或 Ollama 命令行安装模型"}</p>${externalLink("https://ollama.com/search", "浏览 Ollama 模型库")}</div>`;
       return;
     }
-    body.innerHTML = `<section class="model-list">${rows.map((m) => `<article class="model-row" data-model="${AppUtil.esc(m.name)}"><div class="model-main"><div class="model-title"><strong>${AppUtil.esc(m.name)}</strong>${m.running ? '<span class="badge ok">运行中</span>' : '<span class="badge neutral">已安装</span>'}</div><p>${[m.family, m.parameterSize, m.quantization, PodAPI.formatSize(m.size)].filter(Boolean).join(" / ")}</p>${m.running && m.contextLength ? `<small>上下文 ${Number(m.contextLength).toLocaleString("zh-CN")}，保留至 ${AppUtil.fmtDate(m.expiresAt)}</small>` : ""}</div><div class="model-actions"><button class="copy-btn" data-copy="${AppUtil.esc(m.name)}">复制名称</button><a class="copy-btn" href="#/verify?model=${encodeURIComponent(m.name)}">验证</a><button class="copy-btn" data-model-detail="${AppUtil.esc(m.name)}">详情</button></div><div class="model-detail" hidden></div></article>`).join("")}</section><p class="hint">显示 ${rows.length} 个，共 ${allModels.length} 个模型${PodAPI.MOCK ? "（演示数据）" : ""}</p>`;
+    body.innerHTML = `<section class="model-list">${rows.map((m) => `<article class="model-row" data-model="${AppUtil.esc(m.name)}"><div class="model-main"><div class="model-title"><strong>${AppUtil.esc(m.name)}</strong>${m.running ? '<span class="badge ok">运行中</span>' : '<span class="badge neutral">已安装</span>'}</div><p>${AppUtil.esc([m.family, m.parameterSize, m.quantization, PodAPI.formatSize(m.size)].filter(Boolean).join(" / "))}</p>${m.running && m.contextLength ? `<small>上下文 ${Number(m.contextLength).toLocaleString("zh-CN")}，保留至 ${AppUtil.fmtDate(m.expiresAt)}</small>` : ""}</div><div class="model-actions"><button class="copy-btn" data-copy="${AppUtil.esc(m.name)}">复制名称</button><a class="copy-btn" href="#/verify?model=${encodeURIComponent(m.name)}">验证</a><button class="copy-btn" data-model-detail="${AppUtil.esc(m.name)}">详情</button></div><div class="model-detail" hidden></div></article>`).join("")}</section><p class="hint">显示 ${rows.length} 个，共 ${allModels.length} 个模型${PodAPI.MOCK ? "（演示数据）" : ""}</p>`;
     body.querySelectorAll("[data-model-detail]").forEach((btn) => btn.addEventListener("click", async () => {
       const box = btn.closest(".model-row").querySelector(".model-detail");
       if (!box.hidden) { box.hidden = true; btn.textContent = "详情"; return; }
@@ -363,6 +364,7 @@ function renderVerify(el, query) {
   const msgBox = el.querySelector("#verifyMsg");
 
   async function send() {
+    if (sendBtn.disabled) return;
     const model = el.querySelector("#verifyModel").value.trim();
     const content = msgBox.value.trim();
     if (!model) { AppUtil.toast("请填写模型名称"); return; }
@@ -380,7 +382,7 @@ function renderVerify(el, query) {
       <div class="codeblock"><div class="codeblock-head"><span>bash</span>
         <button class="copy-btn" id="curlCopy">复制</button></div>
         <pre><code class="language-bash">${AppUtil.esc(
-          `curl ${PodAPI.externalBase()}/api/chat -d '{\n  "model": "${model}",\n  "messages": [{"role": "user", "content": "${content.replace(/'/g, "'\\''")}"}],\n  "stream": false\n}'`
+          `curl '${PodAPI.externalBase().replace(/'/g, "'\\''")}/api/chat' -H 'Content-Type: application/json' -d '${JSON.stringify({ model, messages: [{ role: "user", content }], stream: false }, null, 2).replace(/'/g, "'\\''")}'`
         )}</code></pre></div>`;
     el.querySelector("#curlCopy").addEventListener("click", (ev) => {
       AppUtil.copyText(ev.currentTarget.closest(".codeblock").querySelector("code").textContent, ev.currentTarget);
@@ -407,6 +409,7 @@ function renderVerify(el, query) {
     }
   }
 
+  window.addEventListener("hashchange", () => aborter?.abort(), { once: true });
   sendBtn.addEventListener("click", send);
   stopBtn.addEventListener("click", () => aborter?.abort());
   msgBox.addEventListener("keydown", (e) => {
@@ -538,7 +541,7 @@ const router = (() => {
 
   function init() {
     window.addEventListener("hashchange", paint);
-    if (!location.hash) location.hash = "#/overview";
+    if (!location.hash) history.replaceState(null, "", "#/overview");
     paint();
   }
   return { init, go };
@@ -605,7 +608,15 @@ function initMobileSheet() {
   const close = () => { mask.hidden = true; btn.setAttribute("aria-expanded", "false"); lastFocus?.focus(); };
   btn.addEventListener("click", open);
   mask.addEventListener("click", (e) => { if (e.target === mask || e.target.closest("[data-close-sheet]") || e.target.closest("a")) close(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !mask.hidden) close(); });
+  document.addEventListener("keydown", (e) => {
+    if (mask.hidden) return;
+    if (e.key === "Escape") close();
+    if (e.key === "Tab") {
+      const items = [...sheet.querySelectorAll("a,button")];
+      if (e.shiftKey && document.activeElement === items[0]) { e.preventDefault(); items.at(-1).focus(); }
+      else if (!e.shiftKey && document.activeElement === items.at(-1)) { e.preventDefault(); items[0].focus(); }
+    }
+  });
 }
 
 /* ============ 启动 ============ */
@@ -615,6 +626,8 @@ function initMobileSheet() {
   initMobileSheet();
 
   document.querySelector(".topbar-brand").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); router.go("overview"); } });
+
+  document.querySelector(".skip-link").addEventListener("click", (e) => { e.preventDefault(); document.getElementById("page").focus(); });
 
   // 顶栏盒子域名
   const chip = document.getElementById("boxDomainChip");

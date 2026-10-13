@@ -23,13 +23,13 @@
 
 ```
 ├── package.yml          # LPK V2 元数据（package / version / locales）
-├── lzc-manifest.yml     # 路由：静态托管 + 算力舱 Ollama 反代
+├── lzc-manifest.yml     # 路由：纯静态托管（浏览器直连 Ollama）
 ├── lzc-build.yml        # 构建配置
 ├── icon.png             # 应用图标（512x512）
 └── content/             # 静态资源（打包为应用内容）
     ├── index.html
     ├── assets/          # css / js / vendor / img
-    └── docs/            # 5 篇使用文档（Markdown）
+    └── docs/            # 6 篇使用文档（Markdown）
 ```
 
 ## 开发与打包
@@ -40,10 +40,22 @@ cd content && python -m http.server 8765
 # 浏览器打开 http://localhost:8765/?mock=1
 
 # 打包 lpk
-lzc-cli project build
+lzc-cli project release
 
 # 部署到微服（开发态）
 lzc-cli project deploy
 ```
 
 修改文档内容只需编辑 `content/docs/*.md`，无需改动代码。
+
+## 1.3.0 更新
+
+- 重新设计算力连接工作台、状态栏、模型列表和移动端导航，支持浅色与深色主题。
+- 为模型请求增加 10 秒超时，修复流式取消、重复发送及页面切换时的终止处理。
+- 正确转义 curl 的 JSON 和 shell 参数，完善文档安全渲染与小屏布局。
+- 声明最低 lzcos 1.6.2；静态容器不申请网络权限，API 由浏览器直接访问。
+- 连接设置和主题保存在浏览器 localStorage，清除站点数据或更换设备后需要重新设置。
+
+## 回归验证
+
+本地启动 `python3 -m http.server 8765 --directory content`，在已安装 Playwright 的 Node 环境运行 `node scripts/qa.cjs`。如未安装 Playwright 浏览器，可使用本机 `/usr/bin/chromium`。截图保存在 `review/screenshots/`，发布验证与规范校准记录见 `review/RELEASE.md`。

@@ -1,0 +1,1 @@
+Redesign the AI Pod connection workspace, readiness checks, and model list with improved mobile layouts and light/dark themes. Fix model request timeouts, stream cancellation, duplicate requests, narrow-screen documentation, and curl escaping. Add usage guidance and reduce permissions.

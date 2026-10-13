@@ -10,7 +10,7 @@
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/vendor/hl-github.css" id="hlThemeLight">
   <link rel="stylesheet" href="assets/vendor/hl-github-dark.css" id="hlThemeDark">
-  <link rel="stylesheet" href="assets/style.css?v=7">
+  <link rel="stylesheet" href="assets/style.css?v=8">
 </head>
 <body>
   <!-- 离线图标雪碧图，统一采用 Tabler Icons 的线性图标语言（MIT） -->
@@ -37,6 +37,7 @@
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
   </svg>
 
+  <a class="skip-link" href="#page">跳到主要内容</a>
   <div id="app">
     <header class="topbar">
       <div class="topbar-brand" onclick="router.go('overview')" role="button" tabindex="0">
@@ -79,7 +80,7 @@
         <a class="nav-item" data-page="endpoints" href="#/endpoints">
           <svg class="icon" aria-hidden="true"><use href="#i-link"></use></svg><span class="nav-label">地址速查</span>
         </a>
-        <div class="sidebar-foot">
+        <div class="sidebar-foot"><p class="sidebar-note">模型留在本地<br>连接更多可能</p>
           <span id="mockBadge" class="mock-badge" hidden>演示模式</span>
         </div>
       </nav>
@@ -150,8 +151,8 @@
   <script src="assets/vendor/purify.min.js"></script>
   <script src="assets/vendor/marked.min.js"></script>
   <script src="assets/vendor/highlight.min.js"></script>
-  <script src="assets/js/api.js?v=7"></script>
-  <script src="assets/js/docs.js?v=7"></script>
-  <script src="assets/js/app.js?v=7"></script>
+  <script src="assets/js/api.js?v=8"></script>
+  <script src="assets/js/docs.js?v=8"></script>
+  <script src="assets/js/app.js?v=8"></script>
 </body>
 </html>

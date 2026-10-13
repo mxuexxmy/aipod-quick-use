@@ -1,16 +1,18 @@
 package: xyz.mxue.ai.pod.aipod-quick-use
-version: 1.2.0
+version: "1.3.0"
+min_os_version: "1.6.2"
 name: AI Pod 综合门户
 description: "稳定只读的 AI Pod 综合门户：检查算力舱与 Ollama、查看模型和运行状态、发现 AI 应用、验证 API 并查阅接入文档。"
 homepage: https://github.com/mxuexxmy/aipod-quick-use
 author: mxuexxmy
 permissions:
-  required:
-    - net.internet
+  required: []
 locales:
   zh-CN:
+    usage: "需要已绑定的 AI Pod 和 Ollama 服务才能检查真实模型或测试对话。自定义服务需允许浏览器跨域。连接设置与主题仅保存在当前浏览器；门户不会下载、删除或更新模型。"
     name: AI Pod 综合门户
     description: "稳定只读的 AI Pod 综合门户：检查算力舱与 Ollama、查看模型和运行状态、发现 AI 应用、验证 API 并查阅接入文档。"
   en-US:
+    usage: "A paired AI Pod and Ollama service are required for live model checks and chat tests. Custom services must allow browser CORS. Connection settings and theme are stored in this browser only. The portal does not download, delete, or update models. The interface and guides are in Chinese."
     name: AI Pod Portal
     description: "A stable read-only AI Pod portal for readiness checks, Ollama models, AI app discovery, API verification, and integration guides."

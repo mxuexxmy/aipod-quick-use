@@ -32,7 +32,8 @@ const DocsCenter = (() => {
     }
     const div = document.createElement("div");
     div.className = "markdown";
-    div.innerHTML = window.DOMPurify ? DOMPurify.sanitize(html) : html;
+    if (window.DOMPurify) div.innerHTML = DOMPurify.sanitize(html);
+    else div.textContent = "文档安全渲染库加载失败，请刷新页面重试。";
     decorate(div);
     return div;
   }
@@ -52,7 +53,8 @@ const DocsCenter = (() => {
       wrap.className = "codeblock";
       const head = document.createElement("div");
       head.className = "codeblock-head";
-      head.innerHTML = '<span class="code-lang">' + lang + "</span>";
+      const label = document.createElement("span");
+      label.className = "code-lang"; label.textContent = lang; head.appendChild(label);
       const btn = document.createElement("button");
       btn.className = "copy-btn";
       btn.textContent = "复制";

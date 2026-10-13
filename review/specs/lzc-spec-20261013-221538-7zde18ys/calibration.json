@@ -1,0 +1,33 @@
+{
+  "created_at": "2026-10-13T14:15:38+00:00",
+  "documents": [
+    {
+      "attempt_errors": [],
+      "bytes": 3763,
+      "content_type": "text/plain; charset=utf-8",
+      "local_file": "store-submission.md",
+      "official_commit": null,
+      "requested_url": "https://gitee.com/lazycatcloud/lzc-developer-doc/raw/master/docs/store-submission-guide.md",
+      "sha256": "98364d1026fa648e1b79924fe9247372a5b94c4006ab1ffe05509bcf70876e8e",
+      "source_kind": "raw",
+      "source_url": "https://raw.giteeusercontent.com/lazycatcloud/lzc-developer-doc/raw/master/docs/store-submission-guide.md?metadata=eyJyIjoibWFzdGVyIiwiZnAiOiJkb2NzL3N0b3JlLXN1Ym1pc3Npb24tZ3VpZGUubWQiLCJwaWQiOjM3NjI4NTMwLCJzdG8iOiJnaXQtc2hhcmRpbmctc3RvLTEwdC0wNDUiLCJycCI6InJlcG9zLzJmL2QxLzJmZDEyNWJlN2Q3YTFjMGQwOWMyNTgzM2VjOGI1ZGNkZjZmMzZkYmIxNGVmNWE5MzY3NDg2MTgzMzMwZTc3YTIuZ2l0IiwiaXNwIjp0cnVlLCJleHBpcmVfYXQiOjE3OTE5MDE4MDB9&signature=rxHnZ36YXq81mPoJmEu51SZ8akl-OyCK8jwS6NwUwx0",
+      "status": "downloaded",
+      "title": "上架审核规则",
+      "topic": "store-submission"
+    }
+  ],
+  "repository": "https://gitee.com/lazycatcloud/lzc-developer-doc",
+  "requested_official_commit": null,
+  "result": "success",
+  "schema_version": 1,
+  "source_policy": [
+    "gitee-raw",
+    "developer-site",
+    "aipod-official-site-only",
+    "explicit-offline-declaration"
+  ],
+  "target_versions": {
+    "lzc_cli": "2.0.9",
+    "lzcos": "1.6.2"
+  }
+}

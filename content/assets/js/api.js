@@ -19,7 +19,7 @@ const PodAPI = (() => {
     try {
       s = Object.assign({ svcMode: "default", customBase: "" }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}"));
     } catch { s = { svcMode: "default", customBase: "" }; }
-    if (s.svcMode === "proxy") s.svcMode = "default"; // 兼容旧版取值
+    if (!["default", "custom"].includes(s.svcMode)) s.svcMode = "default"; // 兼容旧版取值
     return s;
   }
   function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
@@ -91,18 +91,36 @@ const PodAPI = (() => {
   ];
 
   function mockStream({ onDelta, onDone, signal }) {
-    let i = 0, cancelled = false;
-    if (signal) signal.addEventListener("abort", () => { cancelled = true; }, { once: true });
-    const start = performance.now();
-    (function tick() {
-      if (cancelled) return;
-      if (i >= MOCK_REPLY.length) {
-        onDone({ eval_count: 128, total_duration: (performance.now() - start) * 1e6, eval_duration: 2.4e9, cancelled: false });
-        return;
-      }
-      onDelta(MOCK_REPLY[i++]);
-      setTimeout(tick, 90 + Math.random() * 130);
-    })();
+    return new Promise((resolve) => {
+      let i = 0, timer;
+      const start = performance.now();
+      const finish = (cancelled) => {
+        clearTimeout(timer);
+        signal?.removeEventListener("abort", abort);
+        onDone({ eval_count: cancelled ? undefined : 128, total_duration: (performance.now() - start) * 1e6, eval_duration: 2.4e9, cancelled });
+        resolve();
+      };
+      const abort = () => finish(true);
+      if (signal?.aborted) { finish(true); return; }
+      signal?.addEventListener("abort", abort, { once: true });
+      const tick = () => {
+        if (i >= MOCK_REPLY.length) { finish(false); return; }
+        onDelta(MOCK_REPLY[i++]);
+        timer = setTimeout(tick, 160);
+      };
+      tick();
+    });
+  }
+
+  async function request(path, options = {}) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    try {
+      const res = await fetch(reqBase() + path, { ...options, signal: ctrl.signal });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return await res.json();
+    } catch (e) { throw new Error(friendlyError(e)); }
+    finally { clearTimeout(timer); }
   }
 
   // ---------- 探测服务 ----------
@@ -133,9 +151,7 @@ const PodAPI = (() => {
       if (MOCK_SCENARIO === "offline") throw new Error("演示：Ollama 服务不可达");
       return MOCK_SCENARIO === "empty" ? [] : normalizeTags(MOCK_MODELS);
     }
-    const res = await fetch(reqBase() + "/api/tags", { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return normalizeTags(await res.json());
+    return normalizeTags(await request("/api/tags"));
   }
 
   async function listRunningModels() {
@@ -144,9 +160,7 @@ const PodAPI = (() => {
       if (MOCK_SCENARIO === "empty" || MOCK_SCENARIO === "offline") return [];
       return [{ name: "qwen3:4b", size: 2573259904, expiresAt: new Date(Date.now() + 240000).toISOString(), contextLength: 8192 }];
     }
-    const res = await fetch(reqBase() + "/api/ps", { headers: { Accept: "application/json" } });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    return (await res.json()).models?.map((m) => ({
+    return (await request("/api/ps")).models?.map((m) => ({
       name: m.name || m.model || "", size: m.size || m.size_vram || 0,
       expiresAt: m.expires_at || "", contextLength: m.context_length || 0,
     })) || [];
@@ -157,11 +171,9 @@ const PodAPI = (() => {
       await sleep(320);
       return { modelInfo: { "general.architecture": name.includes("nomic") ? "bert" : "qwen3", "general.parameter_count": 4000000000 }, capabilities: name.includes("nomic") ? ["embedding"] : ["completion", "tools", "thinking"], template: "" };
     }
-    const res = await fetch(reqBase() + "/api/show", {
+    const data = await request("/api/show", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: name }),
     });
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
     return { modelInfo: data.model_info || {}, capabilities: data.capabilities || [], template: data.template || "" };
   }
 
@@ -192,11 +204,13 @@ const PodAPI = (() => {
         const text = await res.text().catch(() => "");
         throw new Error("HTTP " + res.status + (text ? "：" + truncate(text, 200) : "") + explainSuffix(text));
       }
+      let completed = false;
       await readNdjson(res, (obj) => {
-        if (obj.error) { onError?.(obj.error); return; }
+        if (obj.error) throw new Error(obj.error);
         if (obj.message?.content) onDelta(obj.message.content);
-        if (obj.done) onDone(obj);
+        if (obj.done) { completed = true; onDone(obj); }
       });
+      if (!completed) throw new Error("响应提前结束，请重新测试");
     } catch (e) {
       if (e.name === "AbortError") { onDone?.({ cancelled: true }); return; }
       onError?.(friendlyError(e));
@@ -215,11 +229,11 @@ const PodAPI = (() => {
       buf = lines.pop();
       for (const line of lines) {
         const s = line.trim();
-        if (s) { try { onLine(JSON.parse(s)); } catch { /* 忽略残行 */ } }
+        if (s) onLine(JSON.parse(s));
       }
     }
     const s = buf.trim();
-    if (s) { try { onLine(JSON.parse(s)); } catch { /* 忽略 */ } }
+    if (s) onLine(JSON.parse(s));
   }
 
   // ---------- 工具 ----------
